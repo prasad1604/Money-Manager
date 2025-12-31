@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "jwt.secret.key",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret.key'"
+  },
+  {
+    "name": "money.manager.frontend.url",
+    "type": "java.lang.String",
+    "description": "A description for 'money.manager.frontend.url'"
+  },
+  {
+    "name": "app.activation.url",
+    "type": "java.lang.String",
+    "description": "A description for 'app.activation.url'"
+  }
+]}
