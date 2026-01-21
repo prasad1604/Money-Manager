@@ -1,5 +1,5 @@
-// export const BASE_URL = "https://money-manager-uw9r.onrender.com/api/v1.0";
-export const BASE_URL = "http://localhost:8080/api/v1.0";
+export const BASE_URL = "https://money-manager-uw9r.onrender.com/api/v1.0";
+//export const BASE_URL = "http://localhost:8080/api/v1.0";
 const CLOUDINARY_CLOUD_NAME = "duvixehjw";
 
 export const API_ENDPOINTS = {
