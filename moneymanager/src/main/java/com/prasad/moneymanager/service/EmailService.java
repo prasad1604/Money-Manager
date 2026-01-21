@@ -57,4 +57,46 @@ public class EmailService {
             log.error("Email sending failed for {}", to, e);
         }
     }
+
+
+    @Async
+    public void sendEmailWithAttachment(
+            String to,
+            String subject,
+            String body,
+            String base64File,
+            String fileName
+    ) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", apiKey);
+
+            String payload = """
+            {
+            "sender": { "email": "%s" },
+            "to": [ { "email": "%s" } ],
+            "subject": "%s",
+            "htmlContent": "%s",
+            "attachment": [
+                {
+                "content": "%s",
+                "name": "%s"
+                }
+            ]
+            }
+            """.formatted(fromEmail, to, subject, body, base64File, fileName);
+
+            HttpEntity<String> request = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(BREVO_API_URL, request, String.class);
+
+            log.info("Email with attachment sent to {}", to);
+
+        } catch (Exception e) {
+            log.error("Failed to send email with attachment to {}", to, e);
+        }
+    }
+
+
 }

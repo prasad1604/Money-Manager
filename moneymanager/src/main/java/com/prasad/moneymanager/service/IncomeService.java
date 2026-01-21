@@ -1,9 +1,17 @@
 package com.prasad.moneymanager.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +21,7 @@ import com.prasad.moneymanager.entity.IncomeEntity;
 import com.prasad.moneymanager.entity.ProfileEntity;
 import com.prasad.moneymanager.repository.CategoryRepository;
 import com.prasad.moneymanager.repository.IncomeRepository;
-
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -23,6 +31,7 @@ public class IncomeService {
     private final CategoryRepository categoryRepository;
     private final IncomeRepository incomeRepository;
     private final ProfileService profileService;
+    private final EmailService emailService;
 
     //Adds a new expense to the database
     public IncomeDTO addIncome(IncomeDTO dto){
@@ -101,5 +110,65 @@ public class IncomeService {
         .createdAt(entity.getCreatedAt())
         .updatedAt(entity.getUpdatedAt())
         .build();
+    }
+
+    public ByteArrayInputStream generateIncomeExcel() throws IOException {
+
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<IncomeEntity> incomes = incomeRepository.findByProfileId(profile.getId());
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Incomes");
+
+        // Header
+        Row header = sheet.createRow(0);
+        String[] columns = {"Name", "Amount", "Date", "Category"};
+
+        for (int i = 0; i < columns.length; i++) {
+            header.createCell(i).setCellValue(columns[i]);
+        }
+
+        // Data rows
+        int rowIdx = 1;
+        for (IncomeEntity income : incomes) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(income.getName());
+            row.createCell(1).setCellValue(income.getAmount().doubleValue());
+            row.createCell(2).setCellValue(income.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+            row.createCell(3).setCellValue(income.getCategory() != null ? income.getCategory().getName() : "");
+        }
+
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    public void emailIncomeExcelToUser() {
+
+        try {
+            ProfileEntity profile = profileService.getCurrentProfile();
+
+            ByteArrayInputStream stream = generateIncomeExcel();
+            byte[] fileBytes = stream.readAllBytes();
+
+            String base64File = Base64.getEncoder().encodeToString(fileBytes);
+
+            emailService.sendEmailWithAttachment(
+                profile.getEmail(),
+                "Your Income Report",
+                "<p>Please find attached your income report.</p>",
+                base64File,
+                "income_details.xlsx"
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to email income report", e);
+        }
     }
 }

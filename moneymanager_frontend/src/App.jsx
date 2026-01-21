@@ -6,7 +6,7 @@ import Filter from "./pages/Filter"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import { Toaster } from "react-hot-toast";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 const App = () => {
   return(
@@ -14,6 +14,7 @@ const App = () => {
     <Toaster/>
     <BrowserRouter>
       <Routes>
+        <Route path="/" Component = {Root}></Route>
         <Route path="/dashboard" element = {<Home/>}></Route>
         <Route path="/income" element = {<Income/>}></Route>
         <Route path="/expense" element = {<Expense/>}></Route>
@@ -24,6 +25,15 @@ const App = () => {
       </Routes>
     </BrowserRouter>
     </>
+  )
+}
+
+const Root = () => {
+  const isAuthenticated =  !!localStorage.getItem("token");
+  return isAuthenticated ? (
+    <Navigate to="/dashboard"/>
+  ) : (
+    <Navigate to="/login"/>
   )
 }
 
